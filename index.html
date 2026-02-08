@@ -1,0 +1,635 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YouTube Monetization Game 🎮</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        :root {
+            --yt-red: #FF0000;
+            --yt-dark: #0f0f0f;
+            --yt-gray: #272727;
+            --gold: #FFD700;
+            --silver: #C0C0C0;
+            --bronze: #CD7F32;
+            --green: #00C853;
+        }
+        body {
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            background: var(--yt-dark);
+            color: white;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container { max-width: 900px; margin: 0 auto; }
+        
+        /* Header */
+        .header {
+            text-align: center;
+            padding: 30px 0;
+            border-bottom: 2px solid var(--yt-red);
+            margin-bottom: 30px;
+        }
+        .header h1 { font-size: 2.5rem; margin-bottom: 10px; }
+        .header h1 span { color: var(--yt-red); }
+        .channel-name { color: var(--gold); font-size: 1.2rem; }
+        
+        /* Stats Input */
+        .stats-input {
+            background: var(--yt-gray);
+            border-radius: 16px;
+            padding: 25px;
+            margin-bottom: 30px;
+        }
+        .stats-input h2 { margin-bottom: 20px; color: var(--yt-red); }
+        .input-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+        }
+        .input-group { display: flex; flex-direction: column; gap: 8px; }
+        .input-group label { font-size: 0.9rem; color: #aaa; }
+        .input-group input {
+            background: var(--yt-dark);
+            border: 2px solid #444;
+            border-radius: 8px;
+            padding: 12px;
+            color: white;
+            font-size: 1.1rem;
+        }
+        .input-group input:focus {
+            outline: none;
+            border-color: var(--yt-red);
+        }
+        .update-btn {
+            background: var(--yt-red);
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 20px;
+            transition: transform 0.2s;
+        }
+        .update-btn:hover { transform: scale(1.05); }
+        
+        /* Level Progress */
+        .level-section {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            border-radius: 16px;
+            padding: 25px;
+            margin-bottom: 30px;
+            border: 2px solid var(--gold);
+        }
+        .level-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        .current-level {
+            font-size: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .level-badge {
+            background: var(--gold);
+            color: black;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-weight: bold;
+        }
+        .xp-display { color: var(--gold); }
+        
+        /* Quest Board */
+        .quest-board {
+            background: var(--yt-gray);
+            border-radius: 16px;
+            padding: 25px;
+            margin-bottom: 30px;
+        }
+        .quest-board h2 {
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .quest {
+            background: var(--yt-dark);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 15px;
+            border-left: 4px solid #444;
+            transition: all 0.3s;
+        }
+        .quest.completed {
+            border-left-color: var(--green);
+            opacity: 0.7;
+        }
+        .quest.active {
+            border-left-color: var(--gold);
+            box-shadow: 0 0 20px rgba(255, 215, 0, 0.2);
+        }
+        .quest-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        .quest-title { font-weight: bold; font-size: 1.1rem; }
+        .quest-reward {
+            background: rgba(255, 215, 0, 0.2);
+            color: var(--gold);
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 0.85rem;
+        }
+        .quest-progress {
+            background: #333;
+            border-radius: 10px;
+            height: 24px;
+            overflow: hidden;
+            margin-top: 10px;
+        }
+        .quest-progress-bar {
+            height: 100%;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.8rem;
+            font-weight: bold;
+            transition: width 0.5s ease;
+        }
+        .quest-progress-bar.subs { background: linear-gradient(90deg, #FF0000, #FF6B6B); }
+        .quest-progress-bar.hours { background: linear-gradient(90deg, #4CAF50, #8BC34A); }
+        .quest-progress-bar.revenue { background: linear-gradient(90deg, #FFD700, #FFA500); }
+        
+        /* Achievement Unlocks */
+        .achievements {
+            background: var(--yt-gray);
+            border-radius: 16px;
+            padding: 25px;
+            margin-bottom: 30px;
+        }
+        .achievements h2 { margin-bottom: 20px; }
+        .achievement-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 15px;
+        }
+        .achievement {
+            background: var(--yt-dark);
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+            border: 2px solid #333;
+            transition: all 0.3s;
+        }
+        .achievement.unlocked {
+            border-color: var(--gold);
+            background: linear-gradient(135deg, rgba(255, 215, 0, 0.1), transparent);
+        }
+        .achievement.locked { opacity: 0.4; }
+        .achievement-icon { font-size: 2.5rem; margin-bottom: 10px; }
+        .achievement-name { font-size: 0.85rem; color: #aaa; }
+        
+        /* Milestones Timeline */
+        .timeline {
+            background: var(--yt-gray);
+            border-radius: 16px;
+            padding: 25px;
+            margin-bottom: 30px;
+        }
+        .timeline h2 { margin-bottom: 20px; }
+        .milestone {
+            display: flex;
+            gap: 20px;
+            padding: 15px 0;
+            border-bottom: 1px solid #333;
+        }
+        .milestone:last-child { border-bottom: none; }
+        .milestone-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            flex-shrink: 0;
+        }
+        .milestone-icon.done { background: var(--green); }
+        .milestone-icon.pending { background: #444; }
+        .milestone-icon.current { background: var(--gold); animation: pulse 2s infinite; }
+        @keyframes pulse {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(255, 215, 0, 0.7); }
+            50% { box-shadow: 0 0 0 15px rgba(255, 215, 0, 0); }
+        }
+        .milestone-content { flex: 1; }
+        .milestone-title { font-weight: bold; margin-bottom: 5px; }
+        .milestone-desc { color: #888; font-size: 0.9rem; }
+        .milestone-value { color: var(--gold); font-weight: bold; margin-top: 5px; }
+        
+        /* Daily Challenges */
+        .daily-challenges {
+            background: linear-gradient(135deg, #2d1f3d 0%, #1a1a2e 100%);
+            border-radius: 16px;
+            padding: 25px;
+            margin-bottom: 30px;
+            border: 2px solid #9C27B0;
+        }
+        .daily-challenges h2 { color: #CE93D8; margin-bottom: 20px; }
+        .challenge {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding: 12px;
+            background: rgba(0,0,0,0.3);
+            border-radius: 8px;
+            margin-bottom: 10px;
+        }
+        .challenge-check {
+            width: 24px;
+            height: 24px;
+            border: 2px solid #9C27B0;
+            border-radius: 6px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .challenge-check.done { background: #9C27B0; }
+        .challenge-text { flex: 1; }
+        .challenge-xp { color: #CE93D8; font-weight: bold; }
+        
+        /* Leaderboard Preview */
+        .leaderboard {
+            background: var(--yt-gray);
+            border-radius: 16px;
+            padding: 25px;
+        }
+        .leaderboard h2 { margin-bottom: 20px; }
+        .rank-item {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding: 12px;
+            background: var(--yt-dark);
+            border-radius: 8px;
+            margin-bottom: 10px;
+        }
+        .rank-position {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+        .rank-1 { background: var(--gold); color: black; }
+        .rank-2 { background: var(--silver); color: black; }
+        .rank-3 { background: var(--bronze); color: black; }
+        .rank-item.you { border: 2px solid var(--yt-red); }
+        
+        /* Footer */
+        .footer {
+            text-align: center;
+            padding: 20px;
+            color: #666;
+            font-size: 0.9rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1>🎮 YouTube <span>Monetization</span> Game</h1>
+            <p class="channel-name">📺 Divine Wisdom Kannada</p>
+        </header>
+        
+        <!-- Stats Input -->
+        <section class="stats-input">
+            <h2>📊 Enter Your Current Stats</h2>
+            <div class="input-grid">
+                <div class="input-group">
+                    <label>👥 Subscribers</label>
+                    <input type="number" id="subs" value="0" min="0">
+                </div>
+                <div class="input-group">
+                    <label>⏱️ Watch Hours (Last 12 months)</label>
+                    <input type="number" id="hours" value="0" min="0">
+                </div>
+                <div class="input-group">
+                    <label>💰 Total Revenue ($)</label>
+                    <input type="number" id="revenue" value="0" min="0" step="0.01">
+                </div>
+                <div class="input-group">
+                    <label>📹 Videos Published</label>
+                    <input type="number" id="videos" value="0" min="0">
+                </div>
+            </div>
+            <button class="update-btn" onclick="updateGame()">🚀 Update Progress</button>
+        </section>
+        
+        <!-- Level Section -->
+        <section class="level-section">
+            <div class="level-header">
+                <div class="current-level">
+                    <span>🎖️ Level</span>
+                    <span class="level-badge" id="level">1</span>
+                    <span id="level-title">Newbie Creator</span>
+                </div>
+                <div class="xp-display">
+                    <span id="xp">0</span> / <span id="xp-next">100</span> XP
+                </div>
+            </div>
+            <div class="quest-progress">
+                <div class="quest-progress-bar subs" id="level-progress" style="width: 0%"></div>
+            </div>
+        </section>
+        
+        <!-- Main Quests -->
+        <section class="quest-board">
+            <h2>⚔️ Main Quests - YPP Eligibility</h2>
+            
+            <div class="quest" id="quest-subs">
+                <div class="quest-header">
+                    <span class="quest-title">👥 Subscriber Quest</span>
+                    <span class="quest-reward">+500 XP</span>
+                </div>
+                <p style="color: #888; font-size: 0.9rem;">Reach 1,000 subscribers to unlock YPP</p>
+                <div class="quest-progress">
+                    <div class="quest-progress-bar subs" id="subs-bar" style="width: 0%">
+                        <span id="subs-text">0 / 1,000</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="quest" id="quest-hours">
+                <div class="quest-header">
+                    <span class="quest-title">⏱️ Watch Time Quest</span>
+                    <span class="quest-reward">+500 XP</span>
+                </div>
+                <p style="color: #888; font-size: 0.9rem;">Reach 4,000 watch hours in last 12 months</p>
+                <div class="quest-progress">
+                    <div class="quest-progress-bar hours" id="hours-bar" style="width: 0%">
+                        <span id="hours-text">0 / 4,000 hrs</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+        <!-- Payment Milestones -->
+        <section class="timeline">
+            <h2>💎 Payment Milestones</h2>
+            
+            <div class="milestone" id="m-tax">
+                <div class="milestone-icon pending" id="m-tax-icon">📋</div>
+                <div class="milestone-content">
+                    <div class="milestone-title">Tax Info Submitted</div>
+                    <div class="milestone-desc">Submit tax info to avoid 24% withholding</div>
+                    <div class="milestone-value">Threshold: $0</div>
+                </div>
+            </div>
+            
+            <div class="milestone" id="m-verify">
+                <div class="milestone-icon pending" id="m-verify-icon">✅</div>
+                <div class="milestone-content">
+                    <div class="milestone-title">Identity Verified</div>
+                    <div class="milestone-desc">Verify identity and address</div>
+                    <div class="milestone-value">Threshold: $10</div>
+                </div>
+            </div>
+            
+            <div class="milestone" id="m-payment">
+                <div class="milestone-icon pending" id="m-payment-icon">💳</div>
+                <div class="milestone-content">
+                    <div class="milestone-title">Payment Method Set</div>
+                    <div class="milestone-desc">Choose how to receive payments</div>
+                    <div class="milestone-value">Threshold: $10</div>
+                </div>
+            </div>
+            
+            <div class="milestone" id="m-payout">
+                <div class="milestone-icon pending" id="m-payout-icon">💰</div>
+                <div class="milestone-content">
+                    <div class="milestone-title">First Payout!</div>
+                    <div class="milestone-desc">Receive your first payment</div>
+                    <div class="milestone-value">Threshold: $100</div>
+                </div>
+            </div>
+        </section>
+        
+        <!-- Achievements -->
+        <section class="achievements">
+            <h2>🏆 Achievements</h2>
+            <div class="achievement-grid">
+                <div class="achievement locked" id="ach-first-video">
+                    <div class="achievement-icon">🎬</div>
+                    <div class="achievement-name">First Upload</div>
+                </div>
+                <div class="achievement locked" id="ach-10-videos">
+                    <div class="achievement-icon">📚</div>
+                    <div class="achievement-name">10 Videos</div>
+                </div>
+                <div class="achievement locked" id="ach-100-subs">
+                    <div class="achievement-icon">💯</div>
+                    <div class="achievement-name">100 Subs</div>
+                </div>
+                <div class="achievement locked" id="ach-500-subs">
+                    <div class="achievement-icon">🔥</div>
+                    <div class="achievement-name">500 Subs</div>
+                </div>
+                <div class="achievement locked" id="ach-1k-subs">
+                    <div class="achievement-icon">🎉</div>
+                    <div class="achievement-name">1K Subs</div>
+                </div>
+                <div class="achievement locked" id="ach-1k-hours">
+                    <div class="achievement-icon">⏰</div>
+                    <div class="achievement-name">1K Hours</div>
+                </div>
+                <div class="achievement locked" id="ach-4k-hours">
+                    <div class="achievement-icon">🏅</div>
+                    <div class="achievement-name">4K Hours</div>
+                </div>
+                <div class="achievement locked" id="ach-ypp">
+                    <div class="achievement-icon">🎊</div>
+                    <div class="achievement-name">YPP Member</div>
+                </div>
+                <div class="achievement locked" id="ach-first-dollar">
+                    <div class="achievement-icon">💵</div>
+                    <div class="achievement-name">First $1</div>
+                </div>
+                <div class="achievement locked" id="ach-100-revenue">
+                    <div class="achievement-icon">💎</div>
+                    <div class="achievement-name">$100 Earned</div>
+                </div>
+            </div>
+        </section>
+        
+        <!-- Daily Challenges -->
+        <section class="daily-challenges">
+            <h2>🌟 Daily Challenges</h2>
+            <div class="challenge">
+                <div class="challenge-check" onclick="toggleChallenge(this)"></div>
+                <span class="challenge-text">Upload 1 video today</span>
+                <span class="challenge-xp">+50 XP</span>
+            </div>
+            <div class="challenge">
+                <div class="challenge-check" onclick="toggleChallenge(this)"></div>
+                <span class="challenge-text">Reply to 5 comments</span>
+                <span class="challenge-xp">+25 XP</span>
+            </div>
+            <div class="challenge">
+                <div class="challenge-check" onclick="toggleChallenge(this)"></div>
+                <span class="challenge-text">Share video on social media</span>
+                <span class="challenge-xp">+20 XP</span>
+            </div>
+            <div class="challenge">
+                <div class="challenge-check" onclick="toggleChallenge(this)"></div>
+                <span class="challenge-text">Research 3 trending topics</span>
+                <span class="challenge-xp">+30 XP</span>
+            </div>
+            <div class="challenge">
+                <div class="challenge-check" onclick="toggleChallenge(this)"></div>
+                <span class="challenge-text">Optimize 1 video thumbnail</span>
+                <span class="challenge-xp">+35 XP</span>
+            </div>
+        </section>
+        
+        <footer class="footer">
+            <p>🎮 YouTube Monetization Game | Track your journey to YPP</p>
+            <p>Channel: Divine Wisdom Kannada</p>
+        </footer>
+    </div>
+    
+    <script>
+        // Level titles
+        const levels = [
+            { level: 1, title: "Newbie Creator", xp: 0 },
+            { level: 2, title: "Aspiring YouTuber", xp: 100 },
+            { level: 3, title: "Content Starter", xp: 250 },
+            { level: 4, title: "Rising Creator", xp: 500 },
+            { level: 5, title: "Active Publisher", xp: 1000 },
+            { level: 6, title: "Growth Hacker", xp: 2000 },
+            { level: 7, title: "Audience Builder", xp: 3500 },
+            { level: 8, title: "YPP Candidate", xp: 5000 },
+            { level: 9, title: "Monetized Creator", xp: 7500 },
+            { level: 10, title: "YouTube Pro", xp: 10000 },
+            { level: 11, title: "Content Master", xp: 15000 },
+            { level: 12, title: "YouTube Legend", xp: 25000 }
+        ];
+        
+        function calculateXP(subs, hours, videos, revenue) {
+            let xp = 0;
+            xp += subs * 0.5;           // 0.5 XP per sub
+            xp += hours * 0.25;         // 0.25 XP per watch hour
+            xp += videos * 20;          // 20 XP per video
+            xp += revenue * 10;         // 10 XP per dollar
+            return Math.floor(xp);
+        }
+        
+        function getLevel(xp) {
+            for (let i = levels.length - 1; i >= 0; i--) {
+                if (xp >= levels[i].xp) {
+                    return levels[i];
+                }
+            }
+            return levels[0];
+        }
+        
+        function updateGame() {
+            const subs = parseInt(document.getElementById('subs').value) || 0;
+            const hours = parseInt(document.getElementById('hours').value) || 0;
+            const revenue = parseFloat(document.getElementById('revenue').value) || 0;
+            const videos = parseInt(document.getElementById('videos').value) || 0;
+            
+            // Calculate XP and Level
+            const xp = calculateXP(subs, hours, videos, revenue);
+            const currentLevel = getLevel(xp);
+            const nextLevel = levels[Math.min(currentLevel.level, levels.length - 1)];
+            
+            document.getElementById('xp').textContent = xp.toLocaleString();
+            document.getElementById('level').textContent = currentLevel.level;
+            document.getElementById('level-title').textContent = currentLevel.title;
+            document.getElementById('xp-next').textContent = nextLevel.xp.toLocaleString();
+            
+            const levelProgress = ((xp - currentLevel.xp) / (nextLevel.xp - currentLevel.xp)) * 100;
+            document.getElementById('level-progress').style.width = Math.min(levelProgress, 100) + '%';
+            
+            // Update Subscriber Quest
+            const subsPercent = Math.min((subs / 1000) * 100, 100);
+            document.getElementById('subs-bar').style.width = subsPercent + '%';
+            document.getElementById('subs-text').textContent = `${subs.toLocaleString()} / 1,000`;
+            
+            const subsQuest = document.getElementById('quest-subs');
+            subsQuest.className = 'quest ' + (subs >= 1000 ? 'completed' : 'active');
+            
+            // Update Watch Hours Quest
+            const hoursPercent = Math.min((hours / 4000) * 100, 100);
+            document.getElementById('hours-bar').style.width = hoursPercent + '%';
+            document.getElementById('hours-text').textContent = `${hours.toLocaleString()} / 4,000 hrs`;
+            
+            const hoursQuest = document.getElementById('quest-hours');
+            hoursQuest.className = 'quest ' + (hours >= 4000 ? 'completed' : 'active');
+            
+            // Update Payment Milestones
+            const yppEligible = subs >= 1000 && hours >= 4000;
+            
+            updateMilestone('m-tax', yppEligible, revenue >= 0);
+            updateMilestone('m-verify', yppEligible && revenue >= 10, revenue >= 10);
+            updateMilestone('m-payment', yppEligible && revenue >= 10, revenue >= 10);
+            updateMilestone('m-payout', yppEligible && revenue >= 100, revenue >= 100);
+            
+            // Update Achievements
+            updateAchievement('ach-first-video', videos >= 1);
+            updateAchievement('ach-10-videos', videos >= 10);
+            updateAchievement('ach-100-subs', subs >= 100);
+            updateAchievement('ach-500-subs', subs >= 500);
+            updateAchievement('ach-1k-subs', subs >= 1000);
+            updateAchievement('ach-1k-hours', hours >= 1000);
+            updateAchievement('ach-4k-hours', hours >= 4000);
+            updateAchievement('ach-ypp', yppEligible);
+            updateAchievement('ach-first-dollar', revenue >= 1);
+            updateAchievement('ach-100-revenue', revenue >= 100);
+            
+            // Save to localStorage
+            localStorage.setItem('yt-game-stats', JSON.stringify({ subs, hours, revenue, videos }));
+        }
+        
+        function updateMilestone(id, isActive, isDone) {
+            const icon = document.getElementById(id + '-icon');
+            icon.className = 'milestone-icon ' + (isDone ? 'done' : (isActive ? 'current' : 'pending'));
+        }
+        
+        function updateAchievement(id, unlocked) {
+            const ach = document.getElementById(id);
+            ach.className = 'achievement ' + (unlocked ? 'unlocked' : 'locked');
+        }
+        
+        function toggleChallenge(el) {
+            el.classList.toggle('done');
+            el.innerHTML = el.classList.contains('done') ? '✓' : '';
+        }
+        
+        // Load saved stats
+        window.onload = function() {
+            const saved = localStorage.getItem('yt-game-stats');
+            if (saved) {
+                const stats = JSON.parse(saved);
+                document.getElementById('subs').value = stats.subs || 0;
+                document.getElementById('hours').value = stats.hours || 0;
+                document.getElementById('revenue').value = stats.revenue || 0;
+                document.getElementById('videos').value = stats.videos || 0;
+                updateGame();
+            }
+        };
+    </script>
+</body>
+</html>
